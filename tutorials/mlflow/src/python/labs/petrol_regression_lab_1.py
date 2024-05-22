@@ -29,7 +29,6 @@ https://stackabuse.com/random-forest-algorithm-with-python-and-scikit-learn/
 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
 """
 
-import os
 import numpy as np
 import mlflow.sklearn
 
@@ -37,7 +36,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import metrics
-from lab_utils import load_data, plot_graphs, get_mlflow_directory_path, print_pandas_dataset
+from lab_utils import Utils
 
 class RFRModel():
     """
@@ -45,6 +44,7 @@ class RFRModel():
     """
     # class wide variables common to all instances
     # keep track of cumulative estimators and rsme
+    # so we can plot the results
     rsme = []
     estimators = []
 
@@ -55,6 +55,10 @@ class RFRModel():
         """
         self.rf = RandomForestRegressor(**params)
         self.params = params
+
+    @classmethod
+    def new_instance(cls, params={}):
+        return cls(params)
 
     def model(self):
         """
@@ -73,15 +77,18 @@ class RFRModel():
         """
 
         with mlflow.start_run(run_name=r_name) as run:
-            # get all attributes
+            # get all feature independent attributes
             X = df.iloc[:, 0:4].values
-            # get all the last columns, which is what we want to predict, our values
+            # get all the values of last columns, dependent variables,
+            # which is what we want to predict as our values, the petrol consumption
             y = df.iloc[:, 4].values
 
             # create train and test data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-            # Feature Scaling
+            # Feature Scaling, though for RF is not necessary.
+            # z = (X - u)/ s, where u is the man, s the standard deviation
+            # get the handle to the transformer
             sc = StandardScaler()
             X_train = sc.fit_transform(X_train)
             X_test = sc.transform(X_test)
@@ -112,19 +119,20 @@ class RFRModel():
             self.estimators.append(params["n_estimators"])
 
             # plot graphs and save as artifacts
-            (fig, ax) = plot_graphs(rfr.estimators, rfr.rsme, "Random Forest Estimators", "Root Mean Square", "Root Mean Square vs Estimators")
+            (fig, ax) = Utils.plot_graphs(rfr.estimators, rfr.rsme, "Random Forest Estimators", "Root Mean Square", "Root Mean Square vs Estimators")
 
             # get current run and experiment id
             runID = run.info.run_uuid
             experimentID = run.info.experiment_id
 
-            # create image artifact directory
-            image_dir = get_mlflow_directory_path(experimentID, runID, "images")
-            save_image = os.path.join(image_dir, "rsme_estimators.png")
-            fig.savefig(save_image)
-
-            # log artifact
-            mlflow.log_artifacts(image_dir, "images")
+            # create temporary artifact file name and log artifact
+            temp_file_name = Utils.get_temporary_directory_path("rsme_estimators-", ".png")
+            temp_name = temp_file_name.name
+            try:
+                fig.savefig(temp_name)
+                mlflow.log_artifact(temp_name, "rsme_estimators_plots")
+            finally:
+                temp_file_name.close()  # Delete the temp file
 
             # print some data
             print("-" * 100)
@@ -144,16 +152,17 @@ class RFRModel():
     # 2. Change or add parameters, such as depth of the tree or random_state: 42 etc.
     # 3. Change or alter the range of runs and increments of n_estimators.
     # 4. Check in MLfow UI if the metrics are affected
-    # challenge-1: create mean square error and r2 artifacts and save them for each run
+    # challenge-1: create root mean square error and r2 artifacts and save them for each run
 
 if __name__ == '__main__':
     # load and print dataset
-    dataset = load_data("data/petrol_consumption.csv")
-    print_pandas_dataset(dataset)
-    # iterate over several runs with different parameters
-    for n in range (25, 100, 25):
+    dataset = Utils.load_data("data/petrol_consumption.csv")
+    Utils.print_pandas_dataset(dataset)
+    # iterate over several runs with different parameters,
+    for n in range (25, 125, 25):
+    # stepping up by 25 trees and limiting to 100
         params = {"n_estimators": n, "random_state": 0 }
-        rfr = RFRModel(params)
+        rfr = RFRModel.new_instance(params)
         (experimentID, runID) = rfr.mlflow_run(dataset)
         print("MLflow Run completed with run_id {} and experiment_id {}".format(runID, experimentID))
         print("-" * 100)

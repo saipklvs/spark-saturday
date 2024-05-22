@@ -1,16 +1,22 @@
+ # READ THIS NOW BEFORE CLONING: 
+
+## This repo has been deprecated and moved to [a new tutorials repo](https://github.com/dmatrix/tutorials)
 
 ![](images/intro_slide.png)
-# MLflow Tutorial at Strata NYC September 24, 2019
+# MLflow Tutorial for 2019 Conferences
 ## Agenda
  * Overview of ML development challenges
  * How MLflow tackles these
  * MLflow Components
- * Ongoing Roadmap
- * Managed MLflow Demo
+   * Mlflow Tracking
+   * MLflow Projects
+   * MLflow Models
+   * MLflow Registry
+ * Managed MLflow MLlib + Registry Demo
  * Q & A
  * (Break?)
  * Set up Environment
- * Hands of Tutorial
+ * Hands-on Tutorial
 ### Prerequisites 
 1. Knowledge of Python 3 and programming in general
 2. Preferably a UNIX-based, fully-charged laptop with 8-16 GB, with a Chrome or Firefox browser
@@ -32,7 +38,21 @@
     * `pip install -r req.txt` or `pip3 install -r req.txt`
 5. `cd labs`
 6. If using PyCharm or IntelliJ, create a project and load source files in the project
-7. Having git clone problems:Worst case, Download the zip file from [https://dbricks.co/StrataNYC](https://dbricks.co/StrataNYC)
+7. Pre-register for [Databricks Community Edition](https://databricks.com/try-databricks)
+
+### Configuring local host with MLflow Credentials for Community Edition (CE)
+
+**Note**: This step is **only** required if you're going to use CE to track experiment runs
+
+Good [Resource Blog](https://databricks.com/blog/2019/10/17/managed-mlflow-now-available-on-databricks-community-edition.html)
+
+1. Run from your shell `databricks configure`
+2. Answer the prompts
+3. **Databricks Host (should begin with https://)**: _https://community.cloud.databricks.com_
+4. **Username**: _enter your community edition login credentials_
+5. **Password**: _enter password for community edition_
+6. Configure MLflow to communicate with the Community Edition server: `export MLFLOW_TRACKING_URI=databricks`
+7. Test out your configuration by creating an experiment via the CLI: `mlflow experiments create -n /Users/username@email_addr/my-experiment`
 
 ### Documentation Resources
 
@@ -41,6 +61,7 @@
 3. [Pandas](https://pandas.pydata.org/pandas-docs/stable/reference/index.html)
 4. [Scikit-Learn](https://scikit-learn.org/stable/index.html)
 5. [Keras](https://keras.io/optimizers/)
+6. [TensorFlow](https://tensorflow.org)
 
 ## Labs 
 The general objective of the labs are to familiarize you with MLflow APIs and how these
@@ -64,6 +85,8 @@ This iterative process is recurrent in each of the lab, as part of model managem
 
 ### Lab-1: Scikit-Learn Regression with RandomForestRegressor 
  [_petrol_regression_lab_1.py_](./labs/petrol_regression_lab_1.py)
+ 
+ [_tensorflow_keras_petrol_regression_lab_1.py_](./labs/tensorflow_keras_petrol_regression_lab_1.py)
 ### Problem
 Part 1: We want to predict the gas consumption in millions of gallons in 48 of the US states
 based on some key features. These features are petrol tax (in cents), per capital income (in US dollars),
@@ -151,8 +174,6 @@ Objectives of this lab:
  **Hint**: Read the blog below on using three algorithms
  
  Nice blog on [RF, SVM, & LR](https://www.vshsolutions.com/blogs/banknote-authentication-using-machine-learning-algorithms/) on detecting fake notes
-
- Nice blog on [TensorFlow and scikit-learn](https://medium.com/tensorist/detecting-fake-banknotes-using-tensorflow-be21ffd2c478) on detecting fake notes
 
  Refresh on [Classification Metrics](https://joshlawman.com/metrics-classification-report-breakdown-precision-recall-f1/)
  
